@@ -16,6 +16,19 @@ class BuildahCli {
     constructor(executable) {
         this.executable = executable;
     }
+    buildUsingDocker(image, context, dockerFiles) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const args = ['bud'];
+            dockerFiles.forEach(file => {
+                args.push('-f');
+                args.push(file);
+            });
+            args.push('t');
+            args.push(image);
+            args.push(context);
+            return yield this.execute(args);
+        });
+    }
     from(baseImage) {
         return __awaiter(this, void 0, void 0, function* () {
             return yield this.execute(['from', baseImage]);
@@ -96,9 +109,9 @@ class BuildahCli {
             };
             const exitCode = yield exec.exec(this.executable, args, options);
             if (exitCode === 1) {
-                return Promise.resolve({ succeeded: false, error: error });
+                return Promise.resolve({ succeeded: false, error });
             }
-            return Promise.resolve({ succeeded: true, output: output });
+            return Promise.resolve({ succeeded: true, output });
         });
     }
 }

@@ -18,21 +18,44 @@ const fs_1 = require("fs");
 const path = require("path");
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
-        let baseImage = core.getInput('base-image');
-        const content = getInputList('content');
-        const newImageName = core.getInput('new-image-name');
-        const entrypoint = getInputList('entrypoint');
-        const port = core.getInput('port');
-        const workingDir = core.getInput('working-dir');
-        const envs = getInputList('envs');
         if (process.env.RUNNER_OS !== 'Linux') {
             return Promise.reject(new Error('Only linux platform is supported at this time.'));
         }
         // get buildah cli
         const buildahPath = yield io.which('buildah', true);
+        const cli = new buildah_1.BuildahCli(buildahPath);
+        const workspace = process.env['GITHUB_WORKSPACE'];
+        let dockerFiles = getInputList('dockerfiles');
+        const newImage = core.getInput('image');
+        if (dockerFiles.length !== 0) {
+            doBuildUsingDockerFiles(cli, newImage, workspace, dockerFiles);
+        }
+        else {
+            doBuildFromScratch(cli, newImage, workspace);
+        }
+    });
+}
+exports.run = run;
+function doBuildUsingDockerFiles(cli, newImage, workspace, dockerFiles) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const context = path.join(workspace, core.getInput('context'));
+        dockerFiles = dockerFiles.map(file => path.join(workspace, file));
+        const build = yield cli.buildUsingDocker(newImage, context, dockerFiles);
+        if (build.succeeded === false) {
+            return Promise.reject(new Error('Failed building an image from docker files.'));
+        }
+    });
+}
+function doBuildFromScratch(cli, newImage, workspace) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let baseImage = core.getInput('base-image');
+        const content = getInputList('content');
+        const entrypoint = getInputList('entrypoint');
+        const port = core.getInput('port');
+        const workingDir = core.getInput('working-dir');
+        const envs = getInputList('envs');
         // if base-image is not specified by the user we need to pick one automatically 
         if (!baseImage) {
-            const workspace = process.env['GITHUB_WORKSPACE'];
             if (workspace) {
                 // check language/framework used and pick base-image automatically
                 const languages = yield recognizer.detectLanguages(workspace);
@@ -45,8 +68,6 @@ function run() {
                 return Promise.reject(new Error('No base image found to create a new container'));
             }
         }
-        // create the new image
-        const cli = new buildah_1.BuildahCli(buildahPath);
         const container = yield cli.from(baseImage);
         if (container.succeeded === false) {
             return Promise.reject(new Error(container.reason));
@@ -66,13 +87,12 @@ function run() {
         if (configResult.succeeded === false) {
             return Promise.reject(new Error(configResult.reason));
         }
-        const commit = yield cli.commit(containerId, newImageName, ['--squash']);
+        const commit = yield cli.commit(containerId, newImage, ['--squash']);
         if (commit.succeeded === false) {
             return Promise.reject(new Error(commit.reason));
         }
     });
 }
-exports.run = run;
 function getInputList(name) {
     const items = core.getInput(name);
     if (!items) {
