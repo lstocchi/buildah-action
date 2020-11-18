@@ -23,7 +23,7 @@ class BuildahCli {
                 args.push('-f');
                 args.push(file);
             });
-            args.push('t');
+            args.push('-t');
             args.push(image);
             args.push(context);
             return yield this.execute(args);
