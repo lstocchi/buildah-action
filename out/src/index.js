@@ -26,7 +26,7 @@ function run() {
         const cli = new buildah_1.BuildahCli(buildahPath);
         const workspace = process.env['GITHUB_WORKSPACE'];
         let dockerFiles = getInputList('dockerfiles');
-        const newImage = core.getInput('image');
+        const newImage = `${core.getInput('image')}:${core.getInput('tag')}`;
         if (dockerFiles.length !== 0) {
             doBuildUsingDockerFiles(cli, newImage, workspace, dockerFiles);
         }
