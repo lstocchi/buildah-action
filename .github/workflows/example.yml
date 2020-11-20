@@ -29,7 +29,7 @@ jobs:
 
     # Build image using Buildah action
     - name: Build Action
-      uses: lstocchi/buildah-action@${GITHUB_REF}
+      uses: lstocchi/buildah-action@lstocchi-patch-1
       with:
         image: spring-petclinic
         tag: v1
