@@ -18,7 +18,7 @@ jobs:
         repository: 'spring-projects/spring-petclinic'
 
     # Setup java
-    - name: Setup Java
+    - name: Setup Javaa
       uses: actions/setup-java@v1
       with:
         java-version: 11
@@ -29,7 +29,7 @@ jobs:
 
     # Build image using Buildah action
     - name: Build Action
-      uses: lstocchi/buildah-action@$GITHUB_REF
+      uses: lstocchi/buildah-action@lstocchi-patch-1
       with:
         image: spring-petclinic
         tag: v1
